@@ -42,6 +42,8 @@ class FrontEnd(mp.Process):
         self.cameras = dict()
         self.device = "cuda:0"
         self.pause = False
+        
+        self.use_gt_poses = config["Training"]["use_gt_poses"]
 
     def set_hyperparams(self):
         self.save_dir = self.config["Results"]["save_dir"]
@@ -158,7 +160,7 @@ class FrontEnd(mp.Process):
                 "name": "exposure_b_{}".format(viewpoint.uid),
             }
         )
-
+        
         pose_optimizer = torch.optim.Adam(opt_params)
         for tracking_itr in range(self.tracking_itr_num):
             render_pkg = render(
@@ -191,8 +193,29 @@ class FrontEnd(mp.Process):
                 )
             if converged:
                 break
+            
 
         self.median_depth = get_median_depth(depth, opacity)
+        return render_pkg
+    
+    def gt_tracking(self, cur_frame_idx, viewpoint):
+        # prev = self.cameras[cur_frame_idx]
+        # viewpoint.update_RT(prev.R, prev.T)
+        
+        self.q_main2vis.put(
+            gui_utils.GaussianPacket(
+                current_frame=viewpoint,
+                gtcolor=viewpoint.original_image,
+                gtdepth=viewpoint.depth
+                if not self.monocular
+                else np.zeros((viewpoint.image_height, viewpoint.image_width)),
+            )
+        )
+        
+        render_pkg = render(
+            viewpoint, self.gaussians, self.pipeline_params, self.background
+        )
+        
         return render_pkg
 
     def is_keyframe(
@@ -388,8 +411,11 @@ class FrontEnd(mp.Process):
                     len(self.current_window) == self.window_size
                 )
 
-                # Tracking
-                render_pkg = self.tracking(cur_frame_idx, viewpoint)
+                if not self.use_gt_poses:
+                    # Tracking
+                    render_pkg = self.tracking(cur_frame_idx, viewpoint)
+                else:
+                    render_pkg = self.gt_tracking(cur_frame_idx, viewpoint)
 
                 current_window_dict = {}
                 current_window_dict[self.current_window[0]] = self.current_window[1:]

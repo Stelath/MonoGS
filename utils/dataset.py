@@ -122,6 +122,78 @@ class TUMParser:
             self.frames.append(frame)
 
 
+class VIPRParser:
+    def __init__(self, input_folder):
+        self.input_folder = input_folder
+        self.load_images(self.input_folder)
+        self.n_img = len(self.color_paths)
+
+    # def load_images(self, datapath):
+    #     # Get image paths from the "images" folder
+    #     image_data = sorted(glob.glob(os.path.join(datapath, "images", "*.jpg")))
+
+    #     self.color_paths = image_data
+    #     self.frames = [{"file_path": path} for path in image_data]
+        
+    #     # Create dummy poses and depths
+    #     faux_depth_path = os.path.join(datapath, 'depth.png')
+    #     size = cv2.imread(image_data[0]).shape
+    #     faux_depth = np.ones(size, dtype=np.uint8) * 255
+    #     cv2.imwrite(faux_depth_path, faux_depth)
+        
+    #     self.poses = [np.eye(4) for _ in range(len(image_data))]
+    #     self.depth_paths = [faux_depth_path for _ in range(len(image_data))]
+    
+    def load_images(self, datapath):
+        image_data = sorted(glob.glob(os.path.join(datapath, "images", "*.jpg")))
+
+        self.color_paths = image_data
+        self.frames = [{"file_path": path} for path in image_data]
+        
+        pose_list = os.path.join(datapath, "poses.txt")
+        self.poses = np.loadtxt(pose_list, delimiter=" ", dtype=np.float64).reshape(-1, 3, 4)
+        self.poses = [np.vstack((pose, np.array([0, 0, 0, 1]))) for pose in self.poses]
+        
+        # Create dummy poses and depths
+        faux_depth_path = os.path.join(datapath, 'depth.png')
+        size = cv2.imread(image_data[0]).shape
+        faux_depth = np.ones(size, dtype=np.uint8) * 255
+        cv2.imwrite(faux_depth_path, faux_depth)
+        
+        self.depth_paths = [faux_depth_path for _ in range(len(image_data))]
+
+
+class RELLISParser:
+    def __init__(self, input_folder):
+        self.input_folder = input_folder
+        self.load_images(self.input_folder)
+        self.n_img = len(self.color_paths)
+
+    def load_images(self, datapath):
+        image_data = sorted(glob.glob(os.path.join(datapath, "pylon_camera_node", "*.jpg")))
+
+        self.color_paths = image_data
+        self.frames = [{"file_path": path} for path in image_data]
+        
+        pose_list = os.path.join(datapath, "poses.txt")
+        self.poses = np.loadtxt(pose_list, delimiter=" ", dtype=np.float64).reshape(-1, 3, 4)
+        self.poses = [np.vstack((pose, np.array([0, 0, 0, 1]))) for pose in self.poses]
+        
+        # Create dummy poses and depths
+        faux_depth_path = os.path.join(datapath, 'depth.png')
+        size = cv2.imread(image_data[0]).shape
+        faux_depth = np.ones(size, dtype=np.uint8) * 255
+        cv2.imwrite(faux_depth_path, faux_depth)
+        
+        self.depth_paths = [faux_depth_path for _ in range(len(image_data))]
+        
+        # Cutoff at 500 frames
+        self.color_paths = self.color_paths[:500]
+        self.poses = self.poses[:500]
+        self.depth_paths = self.depth_paths[:500]
+        self.frames = self.frames[:500]
+
+
 class EuRoCParser:
     def __init__(self, input_folder, start_idx=0):
         self.input_folder = input_folder
