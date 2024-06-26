@@ -476,6 +476,28 @@ class TUMDataset(MonocularDataset):
         self.poses = parser.poses
 
 
+class RELLISDataset(MonocularDataset):
+    def __init__(self, args, path, config):
+        super().__init__(args, path, config)
+        dataset_path = config["Dataset"]["dataset_path"]
+        parser = RELLISParser(dataset_path)
+        self.num_imgs = parser.n_img
+        self.color_paths = parser.color_paths
+        self.depth_paths = parser.depth_paths
+        self.poses = parser.poses
+        
+
+class VIPRDataset(MonocularDataset):
+    def __init__(self, args, path, config):
+        super().__init__(args, path, config)
+        dataset_path = config["Dataset"]["dataset_path"]
+        parser = VIPRParser(dataset_path)
+        self.num_imgs = parser.n_img
+        self.color_paths = parser.color_paths
+        self.depth_paths = parser.depth_paths
+        self.poses = parser.poses
+
+
 class ReplicaDataset(MonocularDataset):
     def __init__(self, args, path, config):
         super().__init__(args, path, config)
@@ -594,6 +616,10 @@ class RealsenseDataset(BaseDataset):
 def load_dataset(args, path, config):
     if config["Dataset"]["type"] == "tum":
         return TUMDataset(args, path, config)
+    elif config["Dataset"]["type"] == "vipr":
+        return VIPRDataset(args, path, config)
+    elif config["Dataset"]["type"] == "rellis":
+        return RELLISDataset(args, path, config)
     elif config["Dataset"]["type"] == "replica":
         return ReplicaDataset(args, path, config)
     elif config["Dataset"]["type"] == "euroc":

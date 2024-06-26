@@ -199,8 +199,8 @@ class FrontEnd(mp.Process):
         return render_pkg
     
     def gt_tracking(self, cur_frame_idx, viewpoint):
-        # prev = self.cameras[cur_frame_idx]
-        # viewpoint.update_RT(prev.R, prev.T)
+        current = self.cameras[cur_frame_idx]
+        viewpoint.update_RT(current.R_gt, current.T_gt)
         
         self.q_main2vis.put(
             gui_utils.GaussianPacket(
@@ -215,6 +215,14 @@ class FrontEnd(mp.Process):
         render_pkg = render(
             viewpoint, self.gaussians, self.pipeline_params, self.background
         )
+        
+        image, depth, opacity = (
+            render_pkg["render"],
+            render_pkg["depth"],
+            render_pkg["opacity"],
+        )
+        
+        self.median_depth = get_median_depth(depth, opacity)
         
         return render_pkg
 

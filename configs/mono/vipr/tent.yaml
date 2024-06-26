@@ -1,0 +1,17 @@
+inherit_from: "configs/mono/vipr/base_config.yaml"
+
+Dataset:
+  dataset_path: datasets/vipr/tent/
+  Calibration:
+    cx: 318.64304
+    cy: 255.313989
+    fx: 517.306408
+    fy: 516.469215
+    height: 480
+    k1: 0.262383
+    k2: -0.953104
+    k3: 1.163314
+    p1: -0.005358
+    p2: 0.002628
+    width: 640
+    distorted: true
